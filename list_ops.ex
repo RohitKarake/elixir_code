@@ -1,0 +1,218 @@
+defmodule Auth.ListOps do
+  @doc """
+    The module to replicate the basic list operations in elixir without
+    using Enum or List library of the Elixir.
+    In this we will define following list operations:
+    1. append
+    2. concatenate
+    3. filter
+    4. list_count
+    5. map
+    6. left_fold
+    7. right_fold
+    8. reverse
+    """
+
+  @doc """
+    Append function which can take two lists and appends list 1 with
+    all items in the second list
+  """
+  @spec append(list, list) :: list | {:error, :not_list}
+  def append(list1, list2) do
+    if is_list(list1) or is_list(list2) do
+      perform_append(list1,list2)
+    else
+      {:error, :not_list}
+    end
+  end
+
+  # function to perform append operation with two list as input
+  defp perform_append(l1, l2) do
+    cond do
+      l1 == [] and l2 ->
+        l2
+      l2 == [] and l1 ->
+        l1
+      true ->
+        [head | tail] = l1
+        [head | perform_append(tail, l2)]
+    end
+  end
+
+  @doc """
+    concatenate function which can take a series of lists as input and gives one layered
+    flattened list
+  """
+  @spec concatenate([[any]]) :: [any]
+  def concatenate(inp_list) when is_list(inp_list) do
+    perform_concat(inp_list)
+  end
+
+  # function to perform concatenation operation on the series of lists to give a flattened list using recursion
+  defp perform_concat([]) do
+    []
+  end
+
+  defp perform_concat([[] | tail_t]) do
+    perform_concat(tail_t)
+  end
+
+  defp perform_concat([[head_h | tail_h] | tail_t]) do
+    [head_h | perform_concat([tail_h | tail_t])]
+  end
+
+  @doc """
+    Filter function which can take a list and function as input
+    and returns the filtered list based on input function condition.
+    This will be similar to filter function of Enum.
+  """
+  @spec filter(list, (any -> as_boolean(term))) :: list
+  def filter(inp_list, inp_func) when is_list(inp_list) do
+    if inp_list == [] do
+      []
+    else
+      perform_filter(inp_list, inp_func)
+    end
+  end
+
+  # recursive function to perform the filter operation using input function on the given list
+  defp perform_filter([], _inp_func) do
+    []
+  end
+
+  defp perform_filter(input_list, inp_func) do
+    [head | tail] = input_list
+    if inp_func.(head) do
+      [head | perform_filter(tail, inp_func)]
+    else
+      perform_filter(tail, inp_func)
+    end
+  end
+
+  @doc """
+    List Count function which can take a list and returns its count of
+    elements.
+    This will be similar to count function of Enum.
+  """
+  @spec list_count(list) :: non_neg_integer | {:error, :not_list}
+  def list_count(inp_list) do
+    if is_list(inp_list) do
+      list_length(inp_list)
+    else
+      {:error, :not_list}
+    end
+  end
+
+  # Function to return count of empty list
+  defp list_length([]) do
+    0
+  end
+
+  # Function to give count of non-empty list
+  defp list_length(input_list) do
+    measure_length(input_list, 0)
+  end
+
+  # recursive function to find length of the list
+  defp measure_length([], count) do
+    count
+  end
+
+  defp measure_length(input_list, count) do
+    [_head | tail] = input_list
+    measure_length(tail, count + 1)
+  end
+
+  @doc """
+    Map function which can take a list and function and returns the list
+    with the elements with operations performed using the input function.
+    This will be similar to map function of Enum.
+  """
+  @spec map(list, (any -> any)) :: list
+  def map(inp_list, inp_func) when is_list(inp_list) do
+    if inp_list == [] do
+      []
+    else
+      perform_map(inp_list, inp_func)
+    end
+  end
+
+  # recursive function to perform the map operation using input function on the given list
+  defp perform_map([], _input_func) do
+    []
+  end
+
+  defp perform_map(input_list, inp_func) do
+    [head | tail] = input_list
+    [inp_func.(head) | perform_map(tail, inp_func)]
+  end
+
+  @doc """
+    left_fold function which can take a list, accumulator and function and returns the list
+    reduced element traversing from left.
+    This is similar to reduce function of Enum.
+  """
+  @type acc :: any
+  @spec left_fold(list, acc, (any, acc -> acc)) :: acc
+  def left_fold(inp_list, acc, inp_func) when is_list(inp_list) do
+    if inp_list == [] do
+      acc
+    else
+      perform_left_fold(inp_list, acc, inp_func)
+    end
+  end
+
+  # recursive function to perform the left fold operation using input function on the given list and an initial accumulator
+  defp perform_left_fold([], acc, _inp_func) do
+    acc
+  end
+
+  defp perform_left_fold(inp_list, acc, inp_func) do
+    [head | tail] = inp_list
+    perform_left_fold(tail, inp_func.(head, acc), inp_func)
+  end
+
+  @doc """
+    right_fold function which can take a list, accumulator and function and returns the list
+    reduced element traversing from right.
+    This is similar to reduce function of Enum.
+  """
+  @spec right_fold(list, acc, (any, acc -> acc)) :: acc
+  def right_fold(inp_list, acc, inp_func) when is_list(inp_list) do
+    if inp_list == [] do
+      acc
+    else
+      perform_right_fold(inp_list, acc, inp_func)
+    end
+  end
+
+  # we can perform right fold operation by simply reversing the list and performing the left fold operation
+  defp perform_right_fold(inp_list, acc, inp_func) do
+    inp_list
+    |> reverse()
+    |> left_fold(acc, inp_func)
+  end
+
+  @doc """
+    Reverse function which can take a list and returns a reversed list.
+    This is similar to reverse function of Enum.
+  """
+  @spec reverse(list) :: list
+  def reverse(inp_list) when is_list(inp_list) do
+    if inp_list == [] do
+      []
+    else
+      perform_reverse(inp_list, [])
+    end
+  end
+
+  # recursive function to reverse the list
+  defp perform_reverse([], reversed_list) do
+    reversed_list
+  end
+
+  defp perform_reverse(input_list, reversed_list) do
+    [head | tail] = input_list
+    perform_reverse(tail, [head | reversed_list])
+  end
+end
